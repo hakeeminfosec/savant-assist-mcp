@@ -67,6 +67,42 @@ services:
     depends_on:
       - postgres
 
+  # Backend API Service
+  backend:
+    build: 
+      context: ./backend
+    container_name: mcp_backend
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=minio123456
+      - MINIO_BUCKET_NAME=documents
+      - MINIO_SECURE=false
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
+      - DATABASE_URL=postgresql://chromadb:chromadb123@postgres:5432/chromadb
+    depends_on:
+      - minio
+      - chromadb
+      - postgres
+
+  # ChromaDB Viewer Service
+  chromadb-viewer:
+    build: 
+      context: ./chromadb-viewer
+    container_name: mcp_chromadb_viewer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
+    depends_on:
+      - chromadb
+
 volumes:
   minio_storage:
     driver: local

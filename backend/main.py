@@ -31,8 +31,10 @@ app.add_middleware(
 # Initialize OpenAI client
 openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Initialize ChromaDB (persistent storage)
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
+# Initialize ChromaDB (connect to containerized service)
+chromadb_host = os.getenv("CHROMADB_HOST", "localhost")
+chromadb_port = int(os.getenv("CHROMADB_PORT", "8001"))
+chroma_client = chromadb.HttpClient(host=chromadb_host, port=chromadb_port)
 collection = None
 
 # Initialize MinIO client
@@ -157,6 +159,7 @@ Please provide a clear, helpful response based on the context provided."""
     except Exception as e:
         print(f"Error generating OpenAI response: {e}")
         return f"I found some relevant information but encountered an error generating the response. The relevant context was: {' '.join(context_docs[:2])}"
+
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(message: ChatMessage):

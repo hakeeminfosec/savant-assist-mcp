@@ -24,33 +24,36 @@ def get_documents_from_backend():
         print(f"Error connecting to backend: {e}")
         return [], 0
 
-def calculate_similarity_score(document, search_term):
-    """Calculate similarity score between document and search term"""
-    if not search_term or not document:
-        return 0
-    
-    doc_lower = str(document).lower()
-    search_lower = search_term.lower()
-    
-    # Base score for exact phrase match
-    score = 0
-    if search_lower in doc_lower:
-        score += 90
-    
-    # Check individual words
-    search_words = search_lower.split()
-    doc_words = doc_lower.split()
-    
-    matched_words = 0
-    for word in search_words:
-        if word in doc_words:
-            matched_words += 1
-    
-    if search_words:
-        word_match_score = (matched_words / len(search_words)) * 60
-        score += word_match_score
-    
-    return min(score, 100)
+def semantic_search_backend(query: str, limit: int = 10):
+    """Perform semantic search using backend API"""
+    try:
+        response = requests.post(f"{BACKEND_URL}/search", 
+                                json={"query": query, "n_results": limit}, 
+                                timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            # Convert backend format to viewer format
+            results = []
+            for i, result in enumerate(data.get('results', [])):
+                results.append({
+                    "id": result.get('chunk_id', f'search_{i}'),
+                    "content": result.get('content', ''),
+                    "preview": result.get('preview', ''),
+                    "similarity_score": int(min(result.get('relevance_score', 0) * 50, 95)) if result.get('similarity', 0) == 0 else int(result.get('similarity', 0) * 100),
+                    "word_count": result.get('word_count', 0),
+                    "title": result.get('title', f'Search Result {i+1}'),
+                    "category": result.get('category', 'Search Result'),
+                    "has_metadata": bool(result.get('metadata', {}))
+                })
+            return results, data.get('total_found', 0)
+        else:
+            print(f"Search API error: {response.status_code} - {response.text}")
+            return [], 0
+    except Exception as e:
+        print(f"Error in semantic search: {e}")
+        return [], 0
+
+# Semantic search is now handled by the backend using OpenAI embeddings
 
 @app.get("/health")
 async def health():
@@ -315,6 +318,10 @@ async def home():
                     <div class="stat-label">Total Words</div>
                 </div>
                 <div class="stat-card">
+                    <span class="stat-number">1536</span>
+                    <div class="stat-label">Embedding Dimensions</div>
+                </div>
+                <div class="stat-card">
                     <span class="stat-number">✓</span>
                     <div class="stat-label">System Status</div>
                 </div>
@@ -325,7 +332,7 @@ async def home():
                     <div class="feature-icon">🔍</div>
                     <div class="feature-title">Smart Search</div>
                     <div class="feature-desc">
-                        Use AI-powered semantic search to find relevant documents based on meaning, not just keywords.
+                        Use AI-powered semantic search with OpenAI's text-embedding-ada-002 model (1536 dimensions) to find relevant documents based on meaning, not just keywords.
                     </div>
                 </div>
                 <div class="feature-card">
@@ -363,8 +370,13 @@ async def home():
 async def documents_page(search: str = Query("", description="Search term"), page: int = Query(1, ge=1)):
     """Enhanced documents page with better UI"""
     try:
-        # Get documents from backend
-        documents, total_count = get_documents_from_backend()
+        # Use semantic search if query provided, otherwise get all documents
+        if search.strip():
+            documents, total_count = semantic_search_backend(search, limit=50)
+            if not documents:
+                documents, total_count = get_documents_from_backend()
+        else:
+            documents, total_count = get_documents_from_backend()
         
         if not documents:
             return HTMLResponse("""
@@ -422,17 +434,8 @@ async def documents_page(search: str = Query("", description="Search term"), pag
             </html>
             """)
         
-        # Filter documents if search is provided
+        # Documents are already filtered/ranked by backend semantic search
         filtered_documents = documents
-        if search:
-            scored_docs = []
-            for doc in documents:
-                doc_text = doc.get('preview', '') or doc.get('content', '')
-                score = calculate_similarity_score(doc_text, search)
-                if score > 15:
-                    doc['similarity_score'] = score
-                    scored_docs.append(doc)
-            filtered_documents = sorted(scored_docs, key=lambda x: x.get('similarity_score', 0), reverse=True)
         
         # Pagination
         per_page = 12
@@ -453,21 +456,22 @@ async def documents_page(search: str = Query("", description="Search term"), pag
             has_metadata = doc.get('has_metadata', False)
             similarity_score = doc.get('similarity_score', 0) if search else 0
             
-            # Match indicator
+            # Semantic similarity indicator
             match_indicator = ""
             if search and similarity_score > 0:
-                if similarity_score >= 80:
-                    color, label = "#22c55e", "Excellent match"
-                elif similarity_score >= 60:
-                    color, label = "#3b82f6", "Good match"
-                elif similarity_score >= 40:
-                    color, label = "#f59e0b", "Fair match"
+                # Use more sophisticated semantic similarity display
+                if similarity_score >= 70:
+                    color, label = "#22c55e", "High semantic relevance"
+                elif similarity_score >= 50:
+                    color, label = "#3b82f6", "Moderate semantic relevance"
+                elif similarity_score >= 30:
+                    color, label = "#f59e0b", "Low semantic relevance"
                 else:
-                    color, label = "#ef4444", "Poor match"
+                    color, label = "#8b5cf6", "Vector space proximity"
                 
                 match_indicator = f"""
                 <div class="match-indicator" style="background: {color};">
-                    {similarity_score:.0f}% • {label}
+                    🧠 {similarity_score:.1f}% semantic similarity • {label}
                 </div>
                 """
             
@@ -763,6 +767,49 @@ async def documents_page(search: str = Query("", description="Search term"), pag
                     backdrop-filter: blur(10px);
                 }}
                 
+                .stats-section {{
+                    padding: 2rem;
+                    margin: 0 auto;
+                    max-width: 1200px;
+                }}
+                
+                .stats-container {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 1.5rem;
+                }}
+                
+                .stat-item {{
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    padding: 2rem 1.5rem;
+                    border-radius: 12px;
+                    text-align: center;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                }}
+                
+                .stat-item:hover {{
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+                }}
+                
+                .stat-number {{
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: #667eea;
+                    margin-bottom: 0.5rem;
+                    line-height: 1;
+                }}
+                
+                .stat-label {{
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    color: #666;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }}
+                
                 @media (max-width: 768px) {{
                     .search-form {{
                         flex-direction: column;
@@ -792,17 +839,42 @@ async def documents_page(search: str = Query("", description="Search term"), pag
                 </div>
             </div>
             
+            <div class="stats-section">
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-number">{total_count}</div>
+                        <div class="stat-label">Total Documents</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{len([doc for doc in documents if doc.get('has_metadata', False)])}</div>
+                        <div class="stat-label">With Metadata</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{sum(doc.get('word_count', 0) for doc in documents):,}</div>
+                        <div class="stat-label">Total Words</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">1536</div>
+                        <div class="stat-label">Embedding Dimensions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">text-embedding-ada-002</div>
+                        <div class="stat-label">OpenAI Model</div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="search-section">
                 <form class="search-form" method="get">
                     <input type="text" name="search" class="search-input" 
-                           placeholder="Search documents by content, title, or keywords..." 
+                           placeholder="🔍 Semantic Search - Ask questions or describe what you're looking for (AI-powered with 1536D embeddings)..." 
                            value="{search}">
                     <input type="hidden" name="page" value="1">
                     <button type="submit" class="search-btn">🔍 Search</button>
                     <a href="/documents" class="clear-btn">✕ Clear</a>
                 </form>
                 <div class="results-info">
-                    {"🔍 Search results for '" + search + "'" if search else "📚 All documents in your knowledge base"}
+                    {"🧠 Semantic search results for '" + search + "' (AI-powered meaning-based matching)" if search else "📚 All documents in your knowledge base"}
                 </div>
             </div>
             
