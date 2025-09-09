@@ -1,185 +1,145 @@
-# Savant Assist MCP v1.0
+# Savant Assist MCP
 
-A comprehensive AI-powered document management and chat system with modern UI and advanced ChromaDB viewer, built on MCP (Message Communication Protocol) architecture.
+A knowledge-based chatbot system built with FastAPI, ChromaDB, and OpenAI that provides intelligent responses using vector search and retrieval-augmented generation (RAG).
 
 ## 🚀 Features
 
-### 💬 **Intelligent Chat Interface**
-- Modern, responsive chat UI with streaming responses
-- Real-time context awareness for natural conversations
-- Advanced message formatting with syntax highlighting
-- Smart document retrieval with semantic search
+- **Vector-Based Knowledge Base**: Uses ChromaDB for semantic search
+- **OpenAI Integration**: Embeddings and GPT-3.5-turbo for intelligent responses
+- **Real-time Chat**: React frontend with WhatsApp-style UI
+- **Knowledge Base Viewer**: Web interface to explore and search the vector database
+- **RESTful API**: FastAPI backend with comprehensive endpoints
 
-### 📚 **Advanced Document Management**
-- **Multi-format support**: PDF, DOCX, TXT files
-- **Intelligent processing**: Automatic text extraction and chunking
-- **Vector embeddings**: Semantic search capabilities
-- **AI-powered analysis**: Automatic categorization and topic extraction
-- **MinIO integration**: Scalable cloud-native file storage
-
-### 🔍 **Professional ChromaDB Viewer**
-- **Beautiful web interface**: Modern gradient design with glass morphism
-- **Smart pagination**: 10/25/50/100 documents per page with navigation
-- **Semantic search**: AI-powered similarity matching with percentage scores
-- **Document cards**: Clean, compact cards with essential information
-- **Detail view**: Full document content with metadata on separate pages
-- **Mobile responsive**: Works perfectly on all devices
-
-### ⚡ **High-Performance Architecture**
-- **FastAPI backend**: High-performance async API
-- **React frontend**: Modern, responsive SPA
-- **ChromaDB**: Efficient vector database (containerized)
-- **Docker containerization**: Complete containerized deployment
-- **MinIO**: S3-compatible object storage with web console
-
-## 🏗 **Architecture**
+## 🏗️ Architecture
 
 ```
-Frontend (React) ←→ Backend (FastAPI) ←→ ChromaDB (Container)
-                            ↓                    ↑
-                      MinIO (Container)    ChromaDB Viewer
-                            ↓                (Port 8080)
-                    OpenAI API (Embeddings)
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   React UI      │────│  FastAPI Backend │────│   ChromaDB      │
+│  (Port 3000)    │    │  (Port 8000)     │    │  Vector Store   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │   OpenAI API     │    │  Knowledge Base │
+                       │  • Embeddings    │    │  • 8 Documents  │
+                       │  • GPT-3.5       │    │  • Embeddings   │
+                       └──────────────────┘    └─────────────────┘
 ```
 
-## 🚀 **Quick Start**
+## 📦 Installation
 
 ### Prerequisites
-- Docker and Docker Compose
-- OpenAI API key
 
-### 1. **Environment Setup**
+- Python 3.9+
+- Node.js 16+
+- OpenAI API Key
+
+### Backend Setup
+
+1. Navigate to the backend directory:
 ```bash
 cd backend
-echo "OPENAI_API_KEY=your-openai-api-key-here" > .env
 ```
 
-### 2. **Start All Services**
+2. Install dependencies:
 ```bash
-# Start containers (MinIO, ChromaDB, ChromaDB Viewer)
-docker-compose up -d
-
-# Start backend
-cd backend
 pip install -r requirements.txt
-python main.py
+```
 
-# Start frontend (new terminal)
+3. Create a `.env` file:
+```bash
+OPENAI_API_KEY=your-openai-api-key-here
+```
+
+4. Start the backend server:
+```bash
+python main.py
+```
+
+### Frontend Setup
+
+1. Navigate to the frontend directory:
+```bash
 cd frontend
+```
+
+2. Install dependencies:
+```bash
 npm install
+```
+
+3. Start the development server:
+```bash
 npm start
 ```
 
-### 3. **Access Applications**
-- **Chat Interface**: http://localhost:3000
-- **Admin Panel**: http://localhost:3000/admin
-- **ChromaDB Viewer**: http://localhost:8080 ⭐
-- **Backend API**: http://localhost:8002/docs
-- **MinIO Console**: http://localhost:9001 (admin/minio123456)
+## 🖥️ Usage
 
-## 🎨 **ChromaDB Viewer Features**
+### Main Chat Interface
+- **URL**: `http://localhost:3000`
+- Features a WhatsApp-style chat interface
+- Ask questions about warehouse management and inventory systems
 
-### **Beautiful Interface**
-- 🎨 Gradient backgrounds with glass morphism effects
-- 📱 Fully responsive design (mobile-optimized)
-- 🃏 Clean, compact document cards
-- 🔍 Professional search interface
+### Knowledge Base Viewer
+- **URL**: `http://localhost:8001`
+- Explore the vector database
+- Perform semantic searches
+- View document statistics and embeddings
 
-### **Smart Search & Pagination**
-- 🎯 **Semantic search** with AI similarity matching
-- 📊 **Match percentages** (90%+ high, 60-79% medium, <60% low)
-- 📄 **Smart pagination** with customizable page sizes
-- 🔀 **Sort by relevance** with visual indicators
+### API Documentation
+- **URL**: `http://localhost:8000/docs`
+- Interactive API documentation via Swagger UI
 
-### **Document Management**
-- 📋 **Card view**: Shows document number, ID, word count
-- 🔍 **"View More"**: Full document content on detail page
-- 📊 **Metadata display**: Complete document metadata
-- 🏠 **Breadcrumb navigation**: Easy navigation between views
+## 💬 Sample Questions
 
-## 📖 **Usage Guide**
+Try asking these questions in the chat:
 
-### **Document Upload (Admin Panel)**
-1. Go to http://localhost:3000/admin
-2. Upload documents (PDF, DOCX, TXT)
-3. Files are processed and vectorized automatically
+- "What is wave picking?"
+- "How does FIFO inventory work?"
+- "Explain cycle counting"
+- "What is cross-docking?"
+- "How does ABC analysis work?"
 
-### **ChromaDB Viewer**
-1. Visit http://localhost:8080
-2. Browse document cards with pagination
-3. **Search**: Type queries like "inventory management"
-4. **View details**: Click "View More" for full content
-5. **Navigate**: Use page numbers or Previous/Next
+## 📊 Knowledge Base
 
-### **Chat Interface**
-1. Go to http://localhost:3000
-2. Ask natural language questions
-3. Get AI responses with document context
+The system currently includes 8 documents covering:
 
-## 🐳 **Docker Services**
+1. **Wave Picking** - Warehouse management method
+2. **FIFO** - First-In-First-Out inventory method
+3. **Cycle Counting** - Inventory auditing process
+4. **Cross-docking** - Logistics practice
+5. **ABC Analysis** - Inventory categorization
+6. **JIT Inventory** - Just-in-time strategy
+7. **WMS** - Warehouse Management System
+8. **Barcode Scanning** - Product information capture
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| Frontend | 3000 | React UI |
-| Backend | 8002 | FastAPI server |
-| ChromaDB | 8001 | Vector database |
-| **ChromaDB Viewer** | **8080** | **Web interface** ⭐ |
-| MinIO API | 9000 | Object storage |
-| MinIO Console | 9001 | Storage web UI |
+## 🔧 Technical Details
 
-## 🎯 **Search Examples**
+### Backend Stack
+- **FastAPI**: Modern Python web framework
+- **ChromaDB**: Vector database for embeddings
+- **OpenAI API**: GPT-3.5-turbo and text-embedding-ada-002
+- **Uvicorn**: ASGI server
 
-Try these in the ChromaDB Viewer:
-- `warehouse management` - Find management-related docs
-- `inventory` - Discover inventory concepts  
-- `FIFO` - Exact term matching
-- `optimization strategies` - Multi-word semantic search
+### Frontend Stack
+- **React**: User interface library
+- **CSS3**: Styling with modern design
+- **Fetch API**: HTTP client for backend communication
 
-## 📊 **Project Structure**
+## 🚀 Extending the System
 
-```
-├── backend/              # FastAPI application
-├── frontend/             # React application  
-├── chromadb-viewer/      # ChromaDB web viewer ⭐
-├── docker-compose.yml    # Container orchestration
-└── README.md            # This file
+### Adding More Documents
+
+1. Edit `kb_documents` in `main.py`:
+```python
+kb_documents = [
+    {"id": "9", "text": "Your new document content..."},
+    # Add more documents
+]
 ```
 
-## 🔧 **Configuration**
+2. Restart the backend to process new embeddings
 
-### **Environment Variables**
-```bash
-# Backend (.env)
-OPENAI_API_KEY=your-key-here
-MINIO_ENDPOINT=localhost:9000
-MINIO_ACCESS_KEY=admin
-MINIO_SECRET_KEY=minio123456
-```
+## 📄 License
 
-## 🔐 **Security & Performance**
-
-- **CORS protection**: Configured origins
-- **File validation**: Size and type checking
-- **Error handling**: Comprehensive exception management
-- **Docker optimization**: Multi-stage builds and layer caching
-- **Responsive design**: Mobile-first approach
-
-## 🆘 **Troubleshooting**
-
-### **Common Issues**
-1. **Port conflicts**: Check ports 3000, 8001, 8002, 8080, 9000, 9001
-2. **OpenAI API**: Verify API key and credits
-3. **Docker issues**: `docker-compose down && docker-compose up -d`
-4. **ChromaDB connection**: Ensure container is running
-
-### **Service Status**
-```bash
-docker-compose ps                    # Check all services
-docker-compose logs chromadb-viewer  # View ChromaDB viewer logs  
-docker-compose logs backend         # View backend logs
-```
-
----
-
-**Built with**: FastAPI, React, ChromaDB, MinIO, OpenAI, Docker
-**Special Feature**: Professional ChromaDB Viewer with semantic search 🎯
+This project is open source and available under the MIT License.

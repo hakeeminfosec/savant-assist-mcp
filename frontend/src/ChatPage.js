@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Admin from './Admin';
-import './App.css';
 
-function ChatInterface() {
+function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +86,8 @@ function ChatInterface() {
     setIsLoading(true);
 
     try {
+      setInputValue('');
+      
       const response = await fetch('http://localhost:8002/chat', {
         method: 'POST',
         headers: {
@@ -115,12 +114,11 @@ function ChatInterface() {
         setMessages(prev => [...prev, errorMessage]);
       }
     } catch (error) {
-      const errorMessage = { text: '🔌 Could not connect to server. Check if the backend is running.', sender: 'bot', timestamp: Date.now() };
+      const errorMessage = { text: '❌ Network error. Please check your connection.', sender: 'bot', timestamp: Date.now() };
       setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
-
-    setInputValue('');
-    setIsLoading(false);
   };
 
   const handleKeyPress = (e) => {
@@ -131,14 +129,11 @@ function ChatInterface() {
   };
 
   const TypingIndicator = () => (
-    <div className="message bot">
-      <div className="typing-indicator">
-        <span>Typing</span>
-        <div className="typing-dots">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+    <div className="typing-indicator">
+      <div className="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
     </div>
   );
@@ -176,7 +171,6 @@ function ChatInterface() {
       setIsMobileMenuOpen(false);
     }
   };
-
 
   const MiniSidebar = () => (
     <div className={`mini-sidebar ${isSidebarCollapsed ? 'show' : ''}`}>
@@ -257,6 +251,14 @@ function ChatInterface() {
           </svg>
           New Chat
         </button>
+        
+        <a href="/admin" className="admin-link" target="_blank" rel="noopener noreferrer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Admin Panel
+        </a>
       </div>
       
       <div className="chat-history">
@@ -272,14 +274,6 @@ function ChatInterface() {
       </div>
 
       <div className="sidebar-footer">
-        <a href="/admin" className="nav-btn admin-nav-btn" style={{ marginBottom: '8px' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          Admin Panel
-        </a>
-        
         <div className="user-profile">
           <div className="user-avatar">
             JD
@@ -295,14 +289,8 @@ function ChatInterface() {
 
   return (
     <div className="App">
-      {isMobileMenuOpen && (
-        <div 
-          className="mobile-overlay"
-          onClick={() => {
-            setIsMobileMenuOpen(false);
-          }}
-        />
-      )}
+      {isMobileMenuOpen && <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />}
+      
       <MiniSidebar />
       <Sidebar />
       <div className={`main-content ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -311,14 +299,14 @@ function ChatInterface() {
           onClick={() => {
             setIsMobileMenuOpen(!isMobileMenuOpen);
             if (!isMobileMenuOpen) {
-              // When opening mobile menu, ensure sidebar isn't collapsed
               setIsSidebarCollapsed(false);
             }
           }}
         >
-          <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
-            <rect x="0" y="1" width="18" height="2.5" rx="1.25" fill="currentColor"/>
-            <rect x="0" y="10.5" width="13" height="2" rx="1" fill="currentColor"/>
+          <svg width="13" height="10" viewBox="0 0 13 10" fill="currentColor">
+            <rect x="0" y="0" width="13" height="2" rx="1" fill="currentColor"/>
+            <rect x="0" y="4" width="13" height="2" rx="1" fill="currentColor"/>
+            <rect x="0" y="8" width="13" height="2" rx="1" fill="currentColor"/>
           </svg>
         </button>
         
@@ -328,38 +316,6 @@ function ChatInterface() {
               <div className="welcome-content">
                 <h2 className="welcome-title">Welcome to Savant Assist</h2>
                 <p className="welcome-description">How can I help you today?</p>
-              </div>
-              <div className="welcome-input">
-                <div className="input-wrapper">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message here..."
-                    disabled={isLoading}
-                    maxLength={1000}
-                  />
-                  <button 
-                    className="send-button-arrow" 
-                    onClick={sendMessage} 
-                    disabled={isLoading || !inputValue.trim()}
-                  >
-                    <svg 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    >
-                      <line x1="7" y1="17" x2="17" y2="7"></line>
-                      <polyline points="7,7 17,7 17,17"></polyline>
-                    </svg>
-                  </button>
-                </div>
               </div>
             </div>
           ) : (
@@ -418,24 +374,13 @@ function ChatInterface() {
                     onKeyPress={handleKeyPress}
                     placeholder="Type your message here..."
                     disabled={isLoading}
-                    maxLength={1000}
                   />
                   <button 
                     className="send-button-arrow" 
                     onClick={sendMessage} 
                     disabled={isLoading || !inputValue.trim()}
                   >
-                    <svg 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    >
-                      <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                       <polyline points="7,7 17,7 17,17"></polyline>
                     </svg>
                   </button>
@@ -449,15 +394,4 @@ function ChatInterface() {
   );
 }
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<ChatInterface />} />
-        <Route path="/admin" element={<Admin />} />
-      </Routes>
-    </Router>
-  );
-}
-
-export default App;
+export default ChatPage;

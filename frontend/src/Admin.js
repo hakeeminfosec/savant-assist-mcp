@@ -14,14 +14,14 @@ function Admin() {
 
   const loadDocuments = async () => {
     try {
-      const response = await fetch('http://localhost:8002/admin/documents');
+      const response = await fetch('http://localhost:8002/documents');
       const data = await response.json();
       
       // Transform API response to match UI format
       const documents = data.documents.map(doc => ({
         id: doc.id,
         name: doc.filename,
-        size: doc.file_size,
+        size: doc.size,
         type: doc.content_type,
         uploadDate: doc.upload_time,
         status: 'processed',
@@ -31,8 +31,7 @@ function Admin() {
         category: doc.category,
         document_type: doc.document_type,
         topics: doc.topics || [],
-        summary: doc.summary,
-        actions: doc.actions || {}
+        summary: doc.summary
       }));
       
       setUploadedFiles(documents);
@@ -269,7 +268,6 @@ function Admin() {
     }
   };
 
-
   const processedCount = uploadedFiles.filter(file => file.status === 'processed').length;
   const totalChunks = uploadedFiles.reduce((acc, file) => acc + (file.chunks || 0), 0);
 
@@ -470,20 +468,18 @@ function Admin() {
                   
                   {/* Card Actions */}
                   <div className="document-actions">
-                    {file.actions?.can_download && (
-                      <button 
-                        className="action-btn download-btn" 
-                        title="Download Document"
-                        disabled={file.status === 'uploading'}
-                        onClick={() => downloadFile(file.id, file.name)}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                          <polyline points="7,10 12,15 17,10"/>
-                          <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                      </button>
-                    )}
+                    <button 
+                      className="action-btn download-btn" 
+                      title="Download Document"
+                      disabled={file.status === 'uploading'}
+                      onClick={() => downloadFile(file.id, file.name)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                    </button>
                     <button 
                       className="action-btn delete-btn" 
                       onClick={() => removeFile(file.id)} 
